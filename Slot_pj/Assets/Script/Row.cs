@@ -4,84 +4,222 @@ using UnityEngine;
 
 public class Row : MonoBehaviour
 {
-    public bool IsRowStopped = true;
-    public string stoppedSlot;
-    public float yStartPosition;
-    public float yEndPosition;
-    public int minSpinRange = 60;
-    public int maxSpinRange = 100;
+    public bool     IsRowStopped       = true;
+    public string   stoppedSlot;
+    public float    xOriginPosition;
+    public float    yStartPosition     = 1.6f;
+    public float    yCenterPosition    = 0.6f;
+    public float    minRollDuration    = 4.0f;
+    public float    maxRollDuration    = 6.0f;
+    public int assignTimes             = 5;
+    public int assignIndex             = 0;
 
-    private int randomValue;
-    private float timeInterval;
+    public Transform[] rowItems;
+
+    private float   yEndPosition;
+    //公式 : MOVE_INTERVAL * MOVE_TIMES = ITEM_INTERVAL <-實際測量各圖片間距是 "1"。
+    private const float ITEM_INTERVAL = 1.0f;
+    private const float MOVE_INTERVAL = 0.25f;
+    private const float MOVE_TIMES    = 4.0f;
+
 
     private void Start()
     {
         IsRowStopped = true;
+        AlignRowItems();
         GameControl.HandlePulled += StartRotating;
     }
 
     private void StartRotating()
     {
         stoppedSlot = "";
-        StartCoroutine("Rotate");
+        StartCoroutine("AssignIndexToRoll", assignIndex);
     }
 
-    private IEnumerator Rotate()
+    private IEnumerator BasicRandomRoll()
     {
         IsRowStopped = false;
-        timeInterval = 0.025f;
+        var aTimeInterval = 0.025f;
+        var aDuration = Random.Range(minRollDuration, maxRollDuration);
+        var aRollTimes = Mathf.RoundToInt(aDuration / aTimeInterval);
+        var aMoveInterval = MOVE_INTERVAL;
 
-        for(int i = 0; i < 30; i++)//Step 1 Rotating Animation
+        if((aRollTimes % MOVE_TIMES) != 0.0f)//使總RollTimes是MOVE_TIMES的倍數。
         {
-            if(IsRowToEnd())
-            {
-                SetToStartPosition();
-            }
-            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
-
-            yield return new WaitForSeconds(timeInterval);
+            var aRemain = aRollTimes % MOVE_TIMES;
+            aRollTimes += (int)(MOVE_TIMES - aRemain);
         }
 
-        randomValue = Random.Range(minSpinRange, maxSpinRange);
-
-        switch(randomValue % 3)
+        var aTimes = 0;
+        while(aTimes < aRollTimes)
         {
-            case 1:
-                randomValue += 2;
-                break;
-            case 2:
-                randomValue += 1;
-                break;
-        }
-
-        for(int i = 0; i < randomValue; i++)//Step 2 Rotating To Position
-        {
-            if(IsRowToEnd())
+            for (int i = 0; i < rowItems.Length; i++)
             {
-                SetToStartPosition();
+                rowItems[i].position = new Vector2(xOriginPosition, rowItems[i].position.y - aMoveInterval);
+                ResetIfOverEndPosition();
             }
-            transform.position = new Vector2(transform.position.x, transform.position.y - 0.25f);
 
-            //if (i > Mathf.RoundToInt(randomValue * 0.25f)) { timeInterval = 0.05f; }
-            //if (i > Mathf.RoundToInt(randomValue * 0.5f)) { timeInterval = 0.1f; }
-            //if (i > Mathf.RoundToInt(randomValue * 0.75f)) { timeInterval = 0.15f; }
-            //if (i > Mathf.RoundToInt(randomValue * 0.95f)) { timeInterval = 0.2f; }
+            if (aTimes > Mathf.RoundToInt(aRollTimes * 0.25f)) { aTimeInterval = 0.0125f; }
+            if (aTimes > Mathf.RoundToInt(aRollTimes * 0.5f)) { aTimeInterval = 0.01f; }
+            if (aTimes > Mathf.RoundToInt(aRollTimes * 0.75f)) { aTimeInterval = 0.05f; }
+            if (aTimes > Mathf.RoundToInt(aRollTimes * 0.95f)) { aTimeInterval = 0.1f; }
 
-            yield return new WaitForSeconds(timeInterval);
+            aTimes++;
+            yield return new WaitForSeconds(aTimeInterval);
         }
 
         IsRowStopped = true;
     }
 
-    private bool IsRowToEnd()
+    private IEnumerator AssignIndexToRoll(int iIndex)
     {
-        bool    IsEnd = transform.position.y <= yEndPosition ? true : false;
-        return  IsEnd;
+        IsRowStopped = false;
+        if(iIndex > (rowItems.Length - 1) || iIndex < 0)
+        {
+            iIndex = 0;
+            Debug.Log("指定Index不能大於 : " + (rowItems.Length - 1));
+        }
+
+        float aSpeed = 2.0f;
+        var aDuration = Random.Range(minRollDuration, maxRollDuration);
+        var aTotalTimes = Mathf.RoundToInt(aDuration / 0.025f);
+
+        //計算目標最小移動次數
+        var aMinMoveTimes = (iIndex - GetCurrentItemIndex());
+        aMinMoveTimes = aMinMoveTimes >= 0 ? aMinMoveTimes : (aMinMoveTimes + rowItems.Length);
+        //計算最小移動數 = 移動總數%元素總數
+        if(aMinMoveTimes != (aTotalTimes % rowItems.Length))
+        {
+            aTotalTimes = aTotalTimes - ((aTotalTimes % rowItems.Length) - aMinMoveTimes);
+        }
+
+
+        int aTimes = 0;
+        while (aTimes < aTotalTimes)
+        {
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.1f)) { aSpeed = 4.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.25f)) { aSpeed = 6.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.75f)) { aSpeed = 3.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.95f)) { aSpeed = 2.0f; }
+
+            aTimes++;
+            yield return StartCoroutine("OnceRoll", aSpeed);
+        }
+
+        IsRowStopped = true;
+
     }
 
-    private void SetToStartPosition()
+    private IEnumerator AssignTimesToRoll(int iTimes)
     {
-        transform.position = new Vector2(transform.position.x, yStartPosition);
+        IsRowStopped = false;
+ 
+        float   aSpeed = 1.0f;
+        int     aTimes = 0;
+        int     aTotalTimes = iTimes;
+
+        while(aTimes < aTotalTimes)
+        {
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.1f)) { aSpeed = 2.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.25f)) { aSpeed = 4.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.75f)) { aSpeed = 2.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.95f)) { aSpeed = 1.0f; }
+
+            aTimes++;
+            yield return StartCoroutine("OnceRoll", aSpeed);
+        }
+
+        IsRowStopped = true;
+    }
+
+    private IEnumerator OnceRoll(float iSpeed)
+    {
+        float[] yPositions = new float[rowItems.Length];
+
+        for(int i = 0; i < yPositions.Length; i++)
+        {
+            yPositions[i] = rowItems[i].position.y - ITEM_INTERVAL;
+        }
+
+        while(!IsAllItemInPosition(yPositions))
+        {
+            for (int i = 0; i < rowItems.Length; i++)
+            {
+                var aTargetPosition = Mathf.MoveTowards(rowItems[i].position.y, yPositions[i], Time.deltaTime * iSpeed);
+                rowItems[i].position = new Vector2(xOriginPosition, aTargetPosition);
+            }
+            yield return 0;
+        }
+
+        ResetIfOverEndPosition();
+    }
+
+    bool IsAllItemInPosition(float[] iPosition)
+    {
+        bool InPosition = true;
+
+        for (int i = 0; i < rowItems.Length; i++)
+        {
+            if (rowItems[i].position.y != iPosition[i]) { InPosition = false; }
+        }
+        return InPosition;
+    }
+
+    Transform FindCurrentItem()
+    {
+        Transform aItem = null;
+
+        for (int i = 0; i < rowItems.Length; i++)
+        {
+            if (rowItems[i].position.y == yCenterPosition)
+            {
+                aItem = rowItems[i];
+            }
+        }
+        return aItem;
+    }
+
+    int GetCurrentItemIndex()
+    {
+        int aIndex = 0;
+
+        for (int i = 0; i < rowItems.Length; i++)
+        {
+            if (rowItems[i].position.y == yCenterPosition)
+            {
+                aIndex = i;
+            }
+        }
+        return aIndex;
+    }
+
+    private void ResetIfOverEndPosition()
+    {
+        for (int i = 0; i < rowItems.Length; i++)
+        {
+            if (rowItems[i].position.y <= yEndPosition)
+            {
+                rowItems[i].position = new Vector2(xOriginPosition, yStartPosition);
+            }
+        }
+    }
+
+    private void AlignRowItems()
+    {
+        if (rowItems == null)
+        {
+            Debug.Log("<color=red>There's no Item in Row!!</color>");
+            return;
+        }
+
+        var yPos = yStartPosition;
+
+        for(int i = (rowItems.Length - 1); i >= 0; i--)
+        {
+            rowItems[i].position = new Vector2(xOriginPosition, yPos);
+            yPos -= ITEM_INTERVAL;
+        }
+        yEndPosition = yPos;
     }
 
     private void OnDestroy()
