@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &38168528
 Transform:
   m_ObjectHideFlags: 0
@@ -357,13 +357,9 @@ MonoBehaviour:
   maxRollDuration: 0.5
   assignTimes: 7
   assignIndex: 0
-  rowItems:
-  - {fileID: 40202003}
-  - {fileID: 1987765766}
-  - {fileID: 641724285}
-  - {fileID: 1014506638}
-  - {fileID: 2055210181}
-  - {fileID: 1221389386}
+  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+    type: 3}
+  rowData: {fileID: 11400000, guid: f229cbfafd6206f43a94de50edb80467, type: 2}
 --- !u!4 &216651049
 Transform:
   m_ObjectHideFlags: 0
@@ -481,7 +477,8 @@ MonoBehaviour:
   maxRollDuration: 6
   assignTimes: 5
   assignIndex: 0
-  rowItems: []
+  rowPrefab: {fileID: 0}
+  rowData: {fileID: 0}
 --- !u!1 &331123450
 GameObject:
   m_ObjectHideFlags: 0
@@ -1065,13 +1062,9 @@ MonoBehaviour:
   maxRollDuration: 0.75
   assignTimes: 8
   assignIndex: 1
-  rowItems:
-  - {fileID: 661095433}
-  - {fileID: 985917823}
-  - {fileID: 45089248}
-  - {fileID: 1442031144}
-  - {fileID: 857905450}
-  - {fileID: 1526499782}
+  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+    type: 3}
+  rowData: {fileID: 11400000, guid: f229cbfafd6206f43a94de50edb80467, type: 2}
 --- !u!4 &670764301
 Transform:
   m_ObjectHideFlags: 0
@@ -1182,7 +1175,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &856683457
 Transform:
   m_ObjectHideFlags: 0
@@ -1493,7 +1486,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1002677928
 Transform:
   m_ObjectHideFlags: 0
@@ -2171,7 +2164,8 @@ MonoBehaviour:
   maxRollDuration: 6
   assignTimes: 5
   assignIndex: 0
-  rowItems: []
+  rowPrefab: {fileID: 0}
+  rowData: {fileID: 0}
 --- !u!1 &1442031143
 GameObject:
   m_ObjectHideFlags: 0
@@ -2629,7 +2623,8 @@ MonoBehaviour:
   maxRollDuration: 6
   assignTimes: 5
   assignIndex: 0
-  rowItems: []
+  rowPrefab: {fileID: 0}
+  rowData: {fileID: 0}
 --- !u!1 &1918057822
 GameObject:
   m_ObjectHideFlags: 0
@@ -3007,13 +3002,9 @@ MonoBehaviour:
   maxRollDuration: 1
   assignTimes: 9
   assignIndex: 2
-  rowItems:
-  - {fileID: 840907055}
-  - {fileID: 380532797}
-  - {fileID: 1918057823}
-  - {fileID: 1107869354}
-  - {fileID: 1563017355}
-  - {fileID: 1862291762}
+  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+    type: 3}
+  rowData: {fileID: 11400000, guid: f916ac451f00d9c45bdbd96e472fa3ca, type: 2}
 --- !u!4 &2104801262
 Transform:
   m_ObjectHideFlags: 0

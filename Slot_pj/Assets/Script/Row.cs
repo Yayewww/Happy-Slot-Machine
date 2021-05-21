@@ -11,11 +11,13 @@ public class Row : MonoBehaviour
     public float    yCenterPosition    = 0.6f;
     public float    minRollDuration    = 4.0f;
     public float    maxRollDuration    = 6.0f;
-    public int assignTimes             = 5;
-    public int assignIndex             = 0;
+    public int      assignTimes        = 5;
+    public int      assignIndex        = 0;
 
-    public Transform[] rowItems;
+    public  RowItem rowPrefab;
+    public  RowData rowData;
 
+    public GameObject[] rowItems;
     private float   yEndPosition;
     //公式 : MOVE_INTERVAL * MOVE_TIMES = ITEM_INTERVAL <-實際測量各圖片間距是 "1"。
     private const float ITEM_INTERVAL = 1.0f;
@@ -26,6 +28,7 @@ public class Row : MonoBehaviour
     private void Start()
     {
         IsRowStopped = true;
+        InstantiateRowObject(rowData);
         AlignRowItems();
         GameControl.HandlePulled += StartRotating;
     }
@@ -55,7 +58,7 @@ public class Row : MonoBehaviour
         {
             for (int i = 0; i < rowItems.Length; i++)
             {
-                rowItems[i].position = new Vector2(xOriginPosition, rowItems[i].position.y - aMoveInterval);
+                rowItems[i].transform.position = new Vector2(xOriginPosition, rowItems[i].transform.position.y - aMoveInterval);
                 ResetIfOverEndPosition();
             }
 
@@ -80,7 +83,7 @@ public class Row : MonoBehaviour
             Debug.Log("指定Index不能大於 : " + (rowItems.Length - 1));
         }
 
-        float aSpeed = 2.0f;
+        float aSpeed = 8.0f;
         var aDuration = Random.Range(minRollDuration, maxRollDuration);
         var aTotalTimes = Mathf.RoundToInt(aDuration / 0.025f);
 
@@ -97,7 +100,7 @@ public class Row : MonoBehaviour
         int aTimes = 0;
         while (aTimes < aTotalTimes)
         {
-            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.1f)) { aSpeed = 4.0f; }
+            if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.1f)) { aSpeed = 10.0f; }
             if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.25f)) { aSpeed = 6.0f; }
             if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.75f)) { aSpeed = 3.0f; }
             if (aTimes > Mathf.RoundToInt(aTotalTimes * 0.95f)) { aSpeed = 2.0f; }
@@ -138,15 +141,15 @@ public class Row : MonoBehaviour
 
         for(int i = 0; i < yPositions.Length; i++)
         {
-            yPositions[i] = rowItems[i].position.y - ITEM_INTERVAL;
+            yPositions[i] = rowItems[i].transform.position.y - ITEM_INTERVAL;
         }
 
         while(!IsAllItemInPosition(yPositions))
         {
             for (int i = 0; i < rowItems.Length; i++)
             {
-                var aTargetPosition = Mathf.MoveTowards(rowItems[i].position.y, yPositions[i], Time.deltaTime * iSpeed);
-                rowItems[i].position = new Vector2(xOriginPosition, aTargetPosition);
+                var aTargetPosition = Mathf.MoveTowards(rowItems[i].transform.position.y, yPositions[i], Time.deltaTime * iSpeed);
+                rowItems[i].transform.position = new Vector2(xOriginPosition, aTargetPosition);
             }
             yield return 0;
         }
@@ -160,7 +163,11 @@ public class Row : MonoBehaviour
 
         for (int i = 0; i < rowItems.Length; i++)
         {
-            if (rowItems[i].position.y != iPosition[i]) { InPosition = false; }
+            //if (rowItems[i].transform.position.y != iPosition[i]) { InPosition = false; }
+            if(Mathf.Approximately(rowItems[i].transform.position.y, iPosition[i]) == false)
+            {
+                InPosition = false;
+            }
         }
         return InPosition;
     }
@@ -171,9 +178,9 @@ public class Row : MonoBehaviour
 
         for (int i = 0; i < rowItems.Length; i++)
         {
-            if (rowItems[i].position.y == yCenterPosition)
+            if (rowItems[i].transform.position.y == yCenterPosition)
             {
-                aItem = rowItems[i];
+                aItem = rowItems[i].transform;
             }
         }
         return aItem;
@@ -185,7 +192,7 @@ public class Row : MonoBehaviour
 
         for (int i = 0; i < rowItems.Length; i++)
         {
-            if (rowItems[i].position.y == yCenterPosition)
+            if (rowItems[i].transform.position.y == yCenterPosition)
             {
                 aIndex = i;
             }
@@ -197,9 +204,9 @@ public class Row : MonoBehaviour
     {
         for (int i = 0; i < rowItems.Length; i++)
         {
-            if (rowItems[i].position.y <= yEndPosition)
+            if (rowItems[i].transform.position.y <= yEndPosition)
             {
-                rowItems[i].position = new Vector2(xOriginPosition, yStartPosition);
+                rowItems[i].transform.position = new Vector2(xOriginPosition, yStartPosition);
             }
         }
     }
@@ -216,10 +223,35 @@ public class Row : MonoBehaviour
 
         for(int i = (rowItems.Length - 1); i >= 0; i--)
         {
-            rowItems[i].position = new Vector2(xOriginPosition, yPos);
+            rowItems[i].transform.position = new Vector2(xOriginPosition, yPos);
             yPos -= ITEM_INTERVAL;
         }
         yEndPosition = yPos;
+    }
+
+    private void InstantiateRowObject(RowData iData)
+    {
+        if (!iData)
+        {
+            Debug.Log("<color=red> No RowData to instance.</color>");
+            return;
+        }
+
+        rowItems = new GameObject[iData.itemData.Length];
+
+        for (int i = 0; i < iData.itemData.Length; i++)
+        {
+            rowItems[i]           = Instantiate(rowPrefab.gameObject, new Vector3(0f, 0f, 0f), Quaternion.identity);
+            RowItem         aItem = rowItems[i].GetComponent<RowItem>();
+            string          aName = iData.itemData[i].itemName;
+            int           aWeight = iData.itemData[i].itemWeight;
+            Sprite        aSprite = iData.itemData[i].itemSprite;
+
+            rowItems[i].transform.SetParent(gameObject.transform, true);
+            aItem.SetItemName(aName);
+            aItem.SetItemWeight(aWeight);
+            aItem.SetItemSprite(aSprite);
+        }
     }
 
     private void OnDestroy()

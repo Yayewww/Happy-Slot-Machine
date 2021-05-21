@@ -10,7 +10,6 @@ public class GameControl : MonoBehaviour
     public static event Action HandlePulled = delegate { };
     public static event Func<int> CheckResults;
 
-
     [SerializeField]
     private Text prizeText;
 
@@ -27,7 +26,7 @@ public class GameControl : MonoBehaviour
         
     }
 
-    private void Update()
+    private void Update()//優化：用Coroutine去測好了沒
     {
         if(!IsAllRowStopeed())
         {
