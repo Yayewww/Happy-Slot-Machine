@@ -357,9 +357,10 @@ MonoBehaviour:
   maxRollDuration: 0.5
   assignTimes: 7
   assignIndex: 0
-  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+  rowPrefab: {fileID: 1020484224836273343, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
     type: 3}
   rowData: {fileID: 11400000, guid: f229cbfafd6206f43a94de50edb80467, type: 2}
+  rowItems: []
 --- !u!4 &216651049
 Transform:
   m_ObjectHideFlags: 0
@@ -479,6 +480,7 @@ MonoBehaviour:
   assignIndex: 0
   rowPrefab: {fileID: 0}
   rowData: {fileID: 0}
+  rowItems: []
 --- !u!1 &331123450
 GameObject:
   m_ObjectHideFlags: 0
@@ -835,6 +837,7 @@ MonoBehaviour:
   - {fileID: 216651048}
   - {fileID: 670764300}
   - {fileID: 2104801261}
+  calResults: {fileID: 617943036}
   handle: {fileID: 617943035}
 --- !u!61 &617943038
 BoxCollider2D:
@@ -1062,9 +1065,10 @@ MonoBehaviour:
   maxRollDuration: 0.75
   assignTimes: 8
   assignIndex: 1
-  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+  rowPrefab: {fileID: 1020484224836273343, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
     type: 3}
   rowData: {fileID: 11400000, guid: f229cbfafd6206f43a94de50edb80467, type: 2}
+  rowItems: []
 --- !u!4 &670764301
 Transform:
   m_ObjectHideFlags: 0
@@ -2166,6 +2170,7 @@ MonoBehaviour:
   assignIndex: 0
   rowPrefab: {fileID: 0}
   rowData: {fileID: 0}
+  rowItems: []
 --- !u!1 &1442031143
 GameObject:
   m_ObjectHideFlags: 0
@@ -2625,6 +2630,7 @@ MonoBehaviour:
   assignIndex: 0
   rowPrefab: {fileID: 0}
   rowData: {fileID: 0}
+  rowItems: []
 --- !u!1 &1918057822
 GameObject:
   m_ObjectHideFlags: 0
@@ -3002,9 +3008,10 @@ MonoBehaviour:
   maxRollDuration: 1
   assignTimes: 9
   assignIndex: 2
-  rowPrefab: {fileID: 5664198127500243469, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
+  rowPrefab: {fileID: 1020484224836273343, guid: e3c5870aa0b43c343bd28b05e1ff0d27,
     type: 3}
-  rowData: {fileID: 11400000, guid: f916ac451f00d9c45bdbd96e472fa3ca, type: 2}
+  rowData: {fileID: 11400000, guid: f229cbfafd6206f43a94de50edb80467, type: 2}
+  rowItems: []
 --- !u!4 &2104801262
 Transform:
   m_ObjectHideFlags: 0

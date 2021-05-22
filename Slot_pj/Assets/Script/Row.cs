@@ -24,19 +24,17 @@ public class Row : MonoBehaviour
     private const float MOVE_INTERVAL = 0.25f;
     private const float MOVE_TIMES    = 4.0f;
 
-
-    private void Start()
+    public void ObjectInitialize()
     {
         IsRowStopped = true;
         InstantiateRowObject(rowData);
         AlignRowItems();
-        GameControl.HandlePulled += StartRotating;
     }
 
-    private void StartRotating()
+    public void StartRotating(int iIndex)
     {
         stoppedSlot = "";
-        StartCoroutine("AssignIndexToRoll", assignIndex);
+        StartCoroutine("AssignIndexToRoll", iIndex);
     }
 
     private IEnumerator BasicRandomRoll()
@@ -252,10 +250,5 @@ public class Row : MonoBehaviour
             aItem.SetItemWeight(aWeight);
             aItem.SetItemSprite(aSprite);
         }
-    }
-
-    private void OnDestroy()
-    {
-        GameControl.HandlePulled -= StartRotating;
     }
 }

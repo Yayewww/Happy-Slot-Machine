@@ -8,7 +8,7 @@ public class GameControl : MonoBehaviour
 {
 
     public static event Action HandlePulled = delegate { };
-    public static event Func<int> CheckResults;
+    public static event Func<int[]> CombinationResult;
 
     [SerializeField]
     private Text prizeText;
@@ -17,13 +17,32 @@ public class GameControl : MonoBehaviour
     private Row[] rows;
 
     [SerializeField]
+    private CalResults calResults;
+
+    [SerializeField]
     private Transform handle;
     private int prizeValue;
     private bool IsResultsChecked = false;
 
-    private void Start()
+    private void Awake()
     {
-        
+        GameInitialize();
+    }
+    
+    private void GameInitialize()
+    {
+        if(rows.Length != 3 || rows == null || calResults == null)
+        {
+            Debug.Log("<color=red> check GameControl are setup or not! </color>");
+            return;
+        }
+
+        for(int i = 0; i < rows.Length; i++)
+        {
+            rows[i].ObjectInitialize();
+        }
+
+        calResults.ObjectInitialize(rows);
     }
 
     private void Update()//優化：用Coroutine去測好了沒
@@ -39,7 +58,7 @@ public class GameControl : MonoBehaviour
         if (IsAllRowStopeed() && !IsResultsChecked)
         {
             IsResultsChecked = true;
-            prizeValue = CheckResults();
+            prizeValue = 0;
             prizeText.enabled = true;
             prizeText.text = "Prize : " + prizeValue;
             Debug.Log("停了，開獎!");
@@ -67,9 +86,17 @@ public class GameControl : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
-        HandlePulled();
+        //HandlePulled();
+        int[] aCombine = CombinationResult();
 
-        for(int i = 0; i < 15; i += 5)
+        if(aCombine != null)
+        {
+            rows[0].StartRotating(aCombine[0]);
+            rows[1].StartRotating(aCombine[1]);
+            rows[2].StartRotating(aCombine[2]);
+        }
+
+        for (int i = 0; i < 15; i += 5)
         {
             handle.Rotate(0f, 0f, -i);
             yield return new WaitForSeconds(0.1f);
