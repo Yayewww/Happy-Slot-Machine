@@ -4,38 +4,36 @@ using UnityEngine;
 
 public class CalResults : MonoBehaviour
 {
+    public  int totalSamples = 100;
+    public float ratioOfTriple = 0.5f;
+
+    private int[] currentResult = { 0, 0, 0 };
     private int[] rowLength = new int[3];
     private Row[] rows = new Row[3];
     private List<int[]> basicCombinations;
     private List<int[]> combinationSamples;
     private int numberOfSamples;
+    private int resultPrizeValue;
     private const int TOTAL_ROW = 3;
-
-    /// <summary>
-    /// 做三種演算結果的方式
-    /// 1. 分開看各軸權重，如 Rows[0]{(A)0.5, (B)0.3, (C)0.2}, Rows[1] {(A)0.1, (B)0.2, (C)0.7}......
-    /// 2. 看單軸權重，但各軸權重會隨上一個結果改變。如Rows[0]{(A)0.5, (B)0.3, (C)0.2}，抽到(A)的話，降低權重增加另外兩者權重->Rows[1] {(A)0.3, (B)0.4, (C)0.3}
-    /// 3. 排列組合上權重，如(A)(A)(A)、(B)(B)(B)，三者相同的組合依照Item的權重製造樣本。兩者相同或三者皆不同的樣本更多。
-    /// </summary>
-    /// <param name="iRows"></param>
 
     public void ObjectInitialize(Row[] iRows)
     {
         rows = iRows;
-        rowLength[0] = rows[0].rowItems.Length;
-        rowLength[1] = rows[1].rowItems.Length;
-        rowLength[2] = rows[2].rowItems.Length;
-
-        basicCombinations = new List<int[]>();
-        combinationSamples = new List<int[]>();
         InstanceBasicCombinations();
         InstanceSamples();
         GameControl.CombinationResult += GiveResult;
+        GameControl.PrizeResult += GivePrize;
     }
 
     void InstanceBasicCombinations()//製造基本互斥組合
     {
-        for(int x = 0; x < rowLength[0]; x++)
+        basicCombinations = new List<int[]>();
+
+        rowLength[0] = rows[0].rowItems.Length;
+        rowLength[1] = rows[1].rowItems.Length;
+        rowLength[2] = rows[2].rowItems.Length;
+
+        for (int x = 0; x < rowLength[0]; x++)
         {
             for(int y = 0; y < rowLength[1]; y++)
             {
@@ -46,143 +44,99 @@ public class CalResults : MonoBehaviour
                 }
             }
         }
-
+        
+        //Debug
         Debug.Log("基本互斥組合總數 : " + basicCombinations.Count);
     }
 
     void InstanceSamples()
     {
-        //決定三者相同、兩者相同、三者不同的樣本數。機率先隨便給{0.1, 0.3, 0.6}
-        int SamplesOfTriple = Mathf.RoundToInt(basicCombinations.Count * 0.5f);
-        int SamplesOfDouble = Mathf.RoundToInt(basicCombinations.Count * 0.2f);
-        int SampleOfSingle  = Mathf.RoundToInt(basicCombinations.Count * 0.3f);
+        combinationSamples = new List<int[]>();
 
-        for (int i = 0; i < basicCombinations.Count; i++)//拉普拉斯平滑處理，製造基本互斥組合在樣本數各一，使其不等於0。
+        for (int i = 0; i < basicCombinations.Count; i++)//拉普拉斯平滑處理(Laplace Smoothing)
         {
             combinationSamples.Add(basicCombinations[i]);
         }
 
-        //for (int j = 0; j < basicCombinations.Count; j++)//依照機率製造樣本數
-        //{
-        //    int x = basicCombinations[j][0];
-        //    int y = basicCombinations[j][1];
-        //    int z = basicCombinations[j][2];
-
-        //    if (x == y && y == z)//三者相同
-        //    {
-        //        for (int t = 0; t < SamplesOfTriple; t++)
-        //        {
-        //            combinationSamples.Add(basicCombinations[j]);
-        //        }
-        //    }
-        //    else if (x == y || y == z || x == z)//兩者相同
-        //    {
-        //        for (int d = 0; d < SamplesOfDouble; d++)
-        //        {
-        //            combinationSamples.Add(basicCombinations[j]);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        for (int s = 0; s < SampleOfSingle; s++)//三者不同
-        //        {
-        //            combinationSamples.Add(basicCombinations[j]);
-        //        }
-        //    }
-        //}
-
-        numberOfSamples = combinationSamples.Count;
-        CheckCombinationsProbability();//Debug
-        Debug.Log("樣本總數 : " + numberOfSamples);
-    }
-
-    void CheckCombinationsProbability()//Debug用，確認各組合在樣本數的占比
-    {
-        float aTriple = 0.0f;
-        float aDouble = 0.0f;
-        float aSingle = 0.0f;
-
-        for(int i = 0; i < combinationSamples.Count; i++)
+        for (int j = 0; j < basicCombinations.Count; j++)//依照機率製造樣本數
         {
-            int x = combinationSamples[i][0];
-            int y = combinationSamples[i][1];
-            int z = combinationSamples[i][2];
+            int x = basicCombinations[j][0];
+            int y = basicCombinations[j][1];
+            int z = basicCombinations[j][2];
+            int aSamplesOfTriple = Mathf.RoundToInt(totalSamples * ratioOfTriple);
+            int aSamplesOfOthers = totalSamples - aSamplesOfTriple;
 
             if (x == y && y == z)//三者相同
             {
-                aTriple++;
+                int aSamples = Mathf.RoundToInt(aSamplesOfTriple / rowLength[0]);
+                for (int t = 1; t < aSamples; t++)//迴圈從1開始，因為前面該組合已經+1了。
+                {
+                    combinationSamples.Add(basicCombinations[j]);
+                }
             }
-            else if (x == y || y == z || x == z)//兩者相同
+            else //其他(兩者相同, 三者不同)
             {
-                aDouble++;
-            }
-            else
-            {
-                aSingle++;
+                int aSamples = Mathf.RoundToInt(aSamplesOfOthers * (1.0f / basicCombinations.Count));
+                for (int o = 1; o < aSamples; o++)
+                {
+                    combinationSamples.Add(basicCombinations[j]);
+                }
             }
         }
 
-        Debug.Log("三者相同 : " + (aTriple / numberOfSamples));
-        Debug.Log("二者相同 : " + (aDouble / numberOfSamples));
-        Debug.Log("都不相同 : " + (aSingle / numberOfSamples));
+        numberOfSamples = combinationSamples.Count;
 
+        //Debug
+        CheckCombinationsProbability();
+        Debug.Log("樣本總數 : " + numberOfSamples);
     }
 
-    int[] GiveResult()
+    int[] GiveResult()//從樣本數裡面抽一個組合結果
     {
         if(combinationSamples.Count == 0)
         {
-            Debug.Log("<color=red>樣本抽完了!!</color>");
-            return null;
+            Debug.Log("<color=red>樣本抽完了，重新生成樣本!!</color>");
+            InstanceSamples();
         }
 
-        int[] aResult = { 0, 0, 0 };
         int aRand = Random.Range(0, (combinationSamples.Count - 1));
 
         if(combinationSamples[aRand] == null)//如果抽到的是已經移除的，重抽，抽到有。
         {
-            aResult = GiveResult();
+            currentResult = GiveResult();
         }
         else
         {
-            aResult = combinationSamples[aRand];
+            currentResult = combinationSamples[aRand];
             combinationSamples.Remove(combinationSamples[aRand]);//抽到後移除此樣本
         }
 
         Debug.Log("樣本剩餘 : " + combinationSamples.Count);
-        return aResult;
+
+        return currentResult;
     }
 
-    bool IsAlreadyInCombinations(int[] iRowCombine)//偵測是否已有相同組合
+    int GivePrize(int iBet)
     {
-        if(basicCombinations.Count == 0) { return false; }
+        int x = currentResult[0];
+        int y = currentResult[1];
+        int z = currentResult[2];
 
-        bool InCombine = false;
-
-        basicCombinations.ForEach(indexCombine =>
+        if (x == y && y == z)//三者相同
         {
-            if(IsAllSame(indexCombine, iRowCombine))
-            {
-                InCombine = true;
-            }
-        });
-
-        return InCombine;
-    }
-
-    bool IsAllSame(int[] xCombine, int[] yCombine)
-    {
-        bool IsSame = true;
-
-        for(int i = 0; i < TOTAL_ROW; i ++)
+            resultPrizeValue = iBet * rows[0].rowData.itemData[x].itemOdds;
+        }
+        else
         {
-            if(xCombine[i] != yCombine[i]) { return false; }
+            resultPrizeValue = 0;
         }
 
-        return IsSame;
+        return resultPrizeValue;
     }
 
-    void PrintSingleCombine(int[] iCombine)
+    #region DEBUG用
+
+    void PrintSingleCombine(int[] iCombine)//列出單一組合
     {
         string aCombine = "";
 
@@ -194,7 +148,7 @@ public class CalResults : MonoBehaviour
         Debug.Log(aCombine);
     }
 
-    void PrintAllCombine()
+    void PrintAllCombine()//列出所有基本互斥組合
     {
         basicCombinations.ForEach(indexCombine => 
         {
@@ -208,4 +162,36 @@ public class CalResults : MonoBehaviour
             Debug.Log(aCombine);
         });
     }
+
+    void CheckCombinationsProbability()//確認各組合在樣本數的占比
+    {
+        float aTriple = 0.0f;
+        float aDouble = 0.0f;
+        float aSingle = 0.0f;
+
+        for (int i = 0; i < combinationSamples.Count; i++)
+        {
+            int x = combinationSamples[i][0];
+            int y = combinationSamples[i][1];
+            int z = combinationSamples[i][2];
+
+            if (x == y && y == z)//三者相同
+            {
+                aTriple++;
+            }
+            else if (x == y || y == z || x == z)//兩者相同
+            {
+                aDouble++;
+            }
+            else if (x != y && y != z && x != z)
+            {
+                aSingle++;
+            }
+        }
+
+        Debug.Log("三者相同 : " + (aTriple / numberOfSamples));
+        Debug.Log("二者相同 : " + (aDouble / numberOfSamples));
+        Debug.Log("都不相同 : " + (aSingle / numberOfSamples));
+    }
+    #endregion
 }

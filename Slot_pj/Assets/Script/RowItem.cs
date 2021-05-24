@@ -6,7 +6,7 @@ using UnityEngine;
 public class RowItem : MonoBehaviour
 {
     private string itemName { get; set; }
-    private int itemWeight { get; set; }
+    private int itemOdds { get; set; }
 
     void Awake()
     {
@@ -15,16 +15,16 @@ public class RowItem : MonoBehaviour
     }
 
     public string GetItemName() { return itemName; }
-    public int GetItemWeight() { return itemWeight; }
+    public int GetitemOdds() { return itemOdds; }
 
     public void SetItemName(string iName)
     {
         itemName = iName;
     }
 
-    public void SetItemWeight(int iWeight)
+    public void SetitemOdds(int iOdds)
     {
-        itemWeight = iWeight;
+        itemOdds = iOdds;
     }
 
     public void SetItemSprite(Sprite iSprite)
